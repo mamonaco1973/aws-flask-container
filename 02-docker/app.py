@@ -4,8 +4,7 @@ import boto3
 from boto3.dynamodb.conditions import Key
 import utils
 
-token = utils.get_token()
-instance_id = utils.get_instance_id(token)
+instance_id = os.popen("hostname -i").read().strip()
 dynamo_table_name = os.environ.get('TC_DYNAMO_TABLE','Candidates')
 dyndb_client = boto3.resource('dynamodb', region_name='us-east-2')
 dyndb_table = dyndb_client.Table(dynamo_table_name)
@@ -21,7 +20,7 @@ def gtg():
     details = request.args.get("details")
 
     if ("details" in request.args):
-        return {"MODIFIED connected": "true", "instance-id": instance_id}, 200
+        return {"connected": "true", "instance-id": instance_id}, 200
     else:
         return Response(status = 200)
 
