@@ -1,12 +1,17 @@
-# Navigate to the 01-lambdas directory
-cd "01-infrastructure"
+cd "03-apprunner"
 
-# Initialize and apply Terraform configuration
-echo "NOTE: Destroying DynamoDB table and ECR Repository."
+echo "NOTE: Destroying app runner instance."
 
 terraform init
 terraform destroy -auto-approve
 
-# Return to the parent directory
 cd ..
+
+echo "NOTE: Deleting ECR repository contents."
+
+ECR_REPOSITORY_NAME="flask-app"
+aws ecr delete-repository --repository-name $ECR_REPOSITORY_NAME --force
+
+
+
 
