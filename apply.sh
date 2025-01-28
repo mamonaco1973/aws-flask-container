@@ -7,9 +7,9 @@ if [ $? -ne 0 ]; then
 fi
 
 
-# Navigate to the 01-lambdas directory
-cd "01-infrastructure" 
-echo "NOTE: Building DynamoDB table and ECR Repository."
+# Navigate to the 01-ecr directory
+cd "01-ecr" 
+echo "NOTE: Building ECR Repository."
 
 terraform init
 terraform apply -auto-approve
@@ -33,6 +33,16 @@ aws ecr get-login-password --region us-east-2 | docker login --username AWS --pa
 
 docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/flask-app:flask-app-rc1 . --push
 
+cd ..
+
+# Navigate to the 03-apprunner directory
+cd 03-apprunner
+echo "NOTE: Building apprunner instance and deploy flask container."
+
+terraform init
+terraform apply -auto-approve
+
+# Return to the parent directory
 cd ..
 
 # Execute the validation script
