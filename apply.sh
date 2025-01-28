@@ -11,7 +11,9 @@ fi
 cd "01-ecr" 
 echo "NOTE: Building ECR Repository."
 
-terraform init
+if [ ! -d ".terraform" ]; then
+    terraform init
+fi
 terraform apply -auto-approve
 
 # Return to the parent directory
@@ -39,7 +41,10 @@ cd ..
 cd 03-apprunner
 echo "NOTE: Building apprunner instance and deploy flask container."
 
-terraform init
+if [ ! -d ".terraform" ]; then
+    terraform init
+fi
+
 terraform apply -auto-approve
 
 # Return to the parent directory

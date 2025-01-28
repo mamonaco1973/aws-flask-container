@@ -2,7 +2,9 @@ cd "03-apprunner"
 
 echo "NOTE: Destroying app runner instance."
 
-terraform init
+if [ ! -d ".terraform" ]; then
+    terraform init
+fi
 terraform destroy -auto-approve
 
 cd ..
