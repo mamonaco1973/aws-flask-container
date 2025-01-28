@@ -46,6 +46,7 @@ terraform apply -auto-approve
 cd ..
 
 # Execute the validation script
-#./validate.sh
+
+./validate.sh
 
 
