@@ -44,12 +44,12 @@ resource "aws_dynamodb_table" "terraform_lock" {
 
 # Generate 01-ecr-backend.tf.template file dynamically
 resource "local_file" "backend_config_ecr" {
-  filename = "01-ecr-backend.tf.template"
+  filename = "../01-ecr/01-ecr-backend.tf"
   content  = <<EOT
 terraform {
   backend "s3" {
     bucket         = "${local.bucket_name}"
-    key            = "terraform.tfstate.01-ecr"
+    key            = "01-ecr/terraform.tfstate.json"
     region         = "us-east-2"
     dynamodb_table = "${aws_dynamodb_table.terraform_lock.name}"
     encrypt        = true
@@ -61,12 +61,12 @@ EOT
 
 # Generate 03-apprunner-backend.tf.template file dynamically
 resource "local_file" "backend_config_apprunner" {
-  filename = "03-apprunner-backend.tf.template"
+  filename = "../03-apprunner/03-apprunner-backend.tf"
   content  = <<EOT
 terraform {
   backend "s3" {
     bucket         = "${local.bucket_name}"
-    key            = "terraform.tfstate.03-apprunner"
+    key            = "03-apprunner/terraform.tfstate.json"
     region         = "us-east-2"
     dynamodb_table = "${aws_dynamodb_table.terraform_lock.name}"
     encrypt        = true
