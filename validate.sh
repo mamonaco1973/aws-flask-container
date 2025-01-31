@@ -13,8 +13,8 @@ fi
 
 cd ./02-docker
 SERVICE_URL="https://$SERVICE_URL"
-echo "NOTE: Testing the API Gateway Solution."
-echo "NOTE: URL for API Solution is $SERVICE_URL/gtg?details=true"
+echo "NOTE: Testing the App Runner Solution."
+echo "NOTE: URL for App Runner Solution is $SERVICE_URL/gtg?details=true"
 ./test_candidates.py $SERVICE_URL
 
 cd ..
