@@ -9,7 +9,7 @@ fi
 
 # Navigate to the 01-ecr directory
 cd "01-ecr" 
-echo "NOTE: Building ECR Repository."
+echo "NOTE: Building ECR Instance."
 
 if [ ! -d ".terraform" ]; then
     terraform init

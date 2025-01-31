@@ -14,7 +14,7 @@ resource "aws_apprunner_service" "flask_app" {
     # Image repository configuration for the service
     image_repository {
       # Fully qualified ECR image identifier, dynamically using the current account ID and region
-      image_identifier = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/flask-app:flask-app-rc1"
+      image_identifier = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/flask-app:flask-app-${var.image_version}"
 
       # Specifies that the image repository is hosted in Amazon Elastic Container Registry (ECR)
       image_repository_type = "ECR"
