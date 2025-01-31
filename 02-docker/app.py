@@ -4,8 +4,8 @@ from flask import Flask, Response, request
 import boto3
 from boto3.dynamodb.conditions import Key
 
-# Fetching the instance ID of the current machine (for debugging or health checks)
-instance_id = os.popen("hostname -i").read().strip()
+# Fetching the hostname of the current machine (for debugging or health checks)
+instance_id = os.popen("hostname -I").read().strip()
 
 # Retrieving the DynamoDB table name from environment variables with a default fallback
 # TC_DYNAMO_TABLE should be set in the environment variables to specify the table name.
@@ -43,7 +43,7 @@ def gtg():
 
     if "details" in request.args:
         return Response(
-            json.dumps({"connected": "true", "instance-id": instance_id}),
+            json.dumps({"connected": "true", "hostname": instance_id}),
             status=200,
             mimetype="application/json"
         )
