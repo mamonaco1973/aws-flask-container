@@ -36,7 +36,7 @@ jobs:
 
           # Prevent a mess from happening if you run the github action without a backend
 
-          backend=$(grep -r 'backend ' *.tf 2> /dev/null)
+          backend=$(grep -r 'backend ' *.tf || true)
           if [ -z "$backend" ]; then
               echo "ERROR: No terraform backend configuration is defined."
               exit 1
@@ -111,7 +111,7 @@ jobs:
 
             # Prevent a mess from happening if you run the github action without a backend
 
-            backend=$(grep -r 'backend ' *.tf 2> /dev/null)
+            backend=$(grep -r 'backend ' *.tf || true)
             if [ -z "$backend" ]; then
               echo "ERROR: No terraform backend configuration is defined."
               exit 1
