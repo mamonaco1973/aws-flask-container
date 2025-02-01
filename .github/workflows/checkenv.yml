@@ -67,7 +67,7 @@ jobs:
             echo "NOTE: Checking AWS CLI connection."  # Inform the user that AWS CLI connection is being tested.
 
             # Attempt to fetch the AWS account identity to verify that the credentials are correct and have the necessary permissions.
-            aws sts get-caller-identity --query "Account" 
+            ACCOUNT_ID=$(aws sts get-caller-identity --query "Account") 
 
             # Check if the previous AWS CLI command succeeded.
             if [ $? -ne 0 ]; then  # If the exit code is not zero, the command failed.
