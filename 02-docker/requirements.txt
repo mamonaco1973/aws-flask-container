@@ -6,7 +6,7 @@ gunicorn>=22.0.0
 itsdangerous==2.0.1
 jinja2>=3.1.5
 jmespath==0.10.0
-MarkupSafe==2.0.1
+MarkupSafe>=2.1.1
 python-dateutil==2.8.1
 s3transfer==0.11.0
 six==1.16.0
