@@ -81,7 +81,7 @@ jobs:
             cd ..
 
   validate:
-    name: Validates Solution
+    name: Validate Solution
     needs: deploy_phase_3
     runs-on: ubuntu-latest
     steps:
