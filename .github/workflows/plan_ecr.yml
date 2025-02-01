@@ -1,28 +1,44 @@
+# Name of the workflow. This indicates the purpose of the pipeline: to generate a Terraform plan for the ECR (Elastic Container Registry) build.
 name: Plan ECR Build
 
+# Trigger for the workflow. This workflow is triggered manually using the `workflow_dispatch` event.
+# This ensures no accidental execution, as it requires explicit user intervention.
 on:
-
   workflow_dispatch:
 
+# Environment variables used throughout the workflow.
+# These are sensitive values stored in GitHub Secrets and injected at runtime.
 env:
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS access key for authentication.
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS secret key for authentication.
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Default AWS region for resource planning.
 
+# Jobs define the sequence of tasks to be executed in the workflow.
 jobs:
+  # Single job: Generates a Terraform plan for the ECR build.
   plan:
-    name: Plan ECR Build
-    runs-on: ubuntu-latest
-    steps:
+    name: Plan ECR Build  # Human-readable name for the job.
+    runs-on: ubuntu-latest  # Specifies the job runs on the latest version of the Ubuntu runner.
+    steps:  # Steps define the individual tasks performed in the job.
+
+      # Step 1: Checkout the repository code to the runner.
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Uses the official GitHub Actions checkout action to fetch the repository contents.
 
+      # Step 2: Set up Terraform on the runner.
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v2  # Utilizes the official HashiCorp action to install Terraform.
 
+      # Step 3: Generate a Terraform plan for the ECR build.
       - name: Generate Terraform Plan
         run: |
-          # Navigate to the 01-ecr directory
-          cd "01-ecr" 
+          # Navigate to the directory containing the Terraform configuration for ECR.
+          cd "01-ecr"
+
+          # Initialize Terraform in the directory.
+          # This downloads the required providers and modules.
           terraform init
+
+          # Generate a Terraform plan.
+          # The plan shows what changes Terraform will make to the infrastructure without actually applying them.
           terraform plan

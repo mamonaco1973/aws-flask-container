@@ -1,0 +1,47 @@
+name: Check Build Environment
+
+on:
+
+  workflow_dispatch:
+
+env:
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  validate:
+    name: Check Environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2  # Uses the official HashiCorp Terraform setup action.
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2  # Uses the official Docker Buildx setup action.
+        with:
+            install: true  # Ensures Docker Buildx is installed.
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@v2
+
+      - name: Validate Build Environment
+        run: |
+            aws --version
+            terraform --version
+            docker --version
+            packer --version
+            echo "NOTE: Checking AWS cli connection."
+
+            aws sts get-caller-identity --query "Account" --output text >> /dev/null
+
+            # Check the return code of the login command
+            if [ $? -ne 0 ]; then
+              echo "ERROR: Failed to connect to AWS. Please check your credentials and environment variables."
+              exit 1
+            else
+              echo "NOTE: Successfully logged into AWS."
+            fi

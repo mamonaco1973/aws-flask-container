@@ -1,43 +1,68 @@
-name: Destroy Solution # The name of the pipeline, indicating its purpose to destroy
+# Name of the workflow. This indicates the purpose of the pipeline: to destroy resources.
+name: Destroy Solution
 
+# Trigger for the workflow. This workflow is triggered manually using the `workflow_dispatch` event.
+# This ensures no accidental execution, as it requires explicit user intervention.
 on:
-  workflow_dispatch: # This pipeline can only be triggered manually, ensuring no accidental execution.
+  workflow_dispatch:
 
+# Environment variables used throughout the workflow.
+# These are sensitive values stored in GitHub Secrets and injected at runtime.
 env:
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS access key for authentication.
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS secret key for authentication.
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Default AWS region for resource destruction.
 
+# Jobs define the sequence of tasks to be executed in the workflow.
 jobs:
-  phase_0: # The job that handles the destruction of infrastructure.
-    runs-on: ubuntu-latest # Specifies the job runs on the latest version of the Ubuntu runner.
-    name:  Destroy App Runner Instance
-    steps: # Steps define the individual tasks performed in the job.
+  # First job: Destroys the AWS App Runner instance.
+  phase_0:
+    runs-on: ubuntu-latest  # Specifies the job runs on the latest version of the Ubuntu runner.
+    name: Destroy App Runner Instance  # Human-readable name for the job.
+    steps:  # Steps define the individual tasks performed in the job.
 
-      - name: Checkout Code # Step to pull the repository code.
-        uses: actions/checkout@v3 # Uses the official GitHub checkout action to fetch the repository contents.
+      # Step 1: Checkout the repository code to the runner.
+      - name: Checkout Code
+        uses: actions/checkout@v3  # Uses the official GitHub Actions checkout action to fetch the repository contents.
 
-      - name: Setup Terraform # Installs the required version of Terraform for managing infrastructure.
-        uses: hashicorp/setup-terraform@v2 # Utilizes the official HashiCorp action to install Terraform.
-        
-      - name: Destroy App Runner Instance # Executes the destruction of all resources managed by Terraform.
-        run: |    
+      # Step 2: Set up Terraform on the runner.
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2  # Utilizes the official HashiCorp action to install Terraform.
+
+      # Step 3: Destroy the App Runner instance using Terraform.
+      - name: Destroy App Runner Instance
+        run: |
+            # Navigate to the directory containing the Terraform configuration for App Runner.
             cd "03-apprunner"
             echo "NOTE: Destroying app runner instance."
+
+            # Initialize Terraform in the directory.
             terraform init
+
+            # Destroy the resources managed by Terraform.
+            # The `-auto-approve` flag skips manual confirmation.
             terraform destroy -auto-approve
+
+            # Navigate back to the root directory.
             cd ..
 
-  phase_1: 
-    runs-on: ubuntu-latest # Specifies the job runs on the latest version of the Ubuntu runner.
-    needs: phase_0
-    name:  Destroy ECR
-    steps: # Steps define the individual tasks performed in the job.
+  # Second job: Destroys the Amazon Elastic Container Registry (ECR) repository.
+  phase_1:
+    runs-on: ubuntu-latest  # Specifies the job runs on the latest version of the Ubuntu runner.
+    needs: phase_0  # Ensures this job runs only after `phase_0` completes.
+    name: Destroy ECR  # Human-readable name for the job.
+    steps:  # Steps define the individual tasks performed in the job.
 
-      - name: Checkout Code # Step to pull the repository code.
-        uses: actions/checkout@v3 # Uses the official GitHub checkout action to fetch the repository contents.
+      # Step 1: Checkout the repository code to the runner.
+      - name: Checkout Code
+        uses: actions/checkout@v3  # Uses the official GitHub Actions checkout action to fetch the repository contents.
 
-      - name: Delete ECR # Executes the destruction of all resources managed by Terraform.
+      # Step 2: Delete the ECR repository using the AWS CLI.
+      - name: Delete ECR
         run: |
+            # Define the name of the ECR repository to delete.
             ECR_REPOSITORY_NAME="flask-app"
+
+            # Delete the ECR repository using the AWS CLI.
+            # The `--force` flag ensures the repository is deleted even if it contains images.
             aws ecr delete-repository --repository-name $ECR_REPOSITORY_NAME --force
