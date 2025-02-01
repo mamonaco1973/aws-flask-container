@@ -1,0 +1,116 @@
+name: Build Solution
+
+on:
+  # Uncomment the following lines to enable automatic pipeline execution when code is pushed to the "main" branch.
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+
+env:
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  setup: 
+    name: Setup Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          install: true
+
+  deploy_phase_1:
+    name: Deploy ECR Instance
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Apply Terraform
+        run: |
+          # Navigate to the 01-ecr directory
+          cd "01-ecr" 
+          echo "NOTE: Building ECR Instance."
+
+          terraform init
+          terraform apply -auto-approve
+
+          cd ..
+  deploy_phase_2:
+    name: Build Flask Container
+    needs: deploy_phase_1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Build Flask Container
+        run: |
+            cd "02-docker"
+            echo "NOTE: Building flask container with Docker."
+
+            # Retrieve the AWS Account ID using the AWS CLI.
+            AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
+
+            # Authenticate Docker to AWS ECR using the retrieved credentials.
+            aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com
+
+            # Build and push the Docker image.
+            # The image tag includes the AWS Account ID and the specified repository and tag.
+
+            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/flask-app:flask-app-rc1 . --push
+            cd ..
+  deploy_phase_3:
+    name: Deploy App Runner Instance
+    needs: deploy_phase_2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Apply Terraform
+        run: |
+            # Navigate to the 03-apprunner directory
+            cd 03-apprunner
+            echo "NOTE: Building apprunner instance and deploy flask container."
+            terraform init
+            terraform apply -auto-approve
+            cd ..
+
+  validate:
+    name: Validates Solution
+    needs: deploy_phase_3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Validate Solution
+        run: |
+            # Fetch the default domain of the App Runner service
+            SERVICE_NAME="flask-app-runner"
+            SERVICE_URL=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$SERVICE_NAME'].ServiceUrl" --output text)
+
+            # Check if the SERVICE_URL is empty
+            if [[ -z "$SERVICE_URL" || "$SERVICE_URL" == "None" ]]; then
+                echo "ERROR: Default domain for App Runner service '$SERVICE_NAME' could not be retrieved. Please check if the service exists and try again."
+                exit 1
+            fi
+
+            cd ./02-docker
+            SERVICE_URL="https://$SERVICE_URL"
+            echo "NOTE: Testing the App Runner Solution."
+            echo "NOTE: URL for App Runner Solution is $SERVICE_URL/gtg?details=true"
+            ./test_candidates.py $SERVICE_URL
+
+           
