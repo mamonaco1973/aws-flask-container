@@ -1,47 +1,50 @@
-name: Check Build Environment
+name: Check Build Environment  # Name of the workflow for easy identification in GitHub Actions.
 
 on:
-
-  workflow_dispatch:
+  workflow_dispatch:  # This allows the workflow to be manually triggered from the GitHub Actions UI.
 
 env:
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Securely pulls AWS Access Key ID from GitHub Secrets.
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Securely pulls AWS Secret Access Key from GitHub Secrets.
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Defines the AWS region using a secret.
 
 jobs:
-  validate:
-    name: Check Environment
-    runs-on: ubuntu-latest
+  validate:  # Defines a job named 'validate' which will perform the environment checks.
+    name: Check Environment  # Human-readable name for the job shown in GitHub Actions.
+    runs-on: ubuntu-latest  # Specifies that the job runs on the latest Ubuntu GitHub-hosted runner.
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout Code  # First step to pull down the repository code onto the runner.
+        uses: actions/checkout@v3  # Uses the latest version of the official GitHub checkout action.
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2  # Uses the official HashiCorp Terraform setup action.
+      - name: Setup Terraform  # Step to install and configure Terraform.
+        uses: hashicorp/setup-terraform@v2  # Uses the official HashiCorp action to install Terraform.
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2  # Uses the official Docker Buildx setup action.
+      - name: Set up Docker Buildx  # Step to install Docker Buildx, a tool for advanced Docker builds.
+        uses: docker/setup-buildx-action@v2  # Official Docker action to set up Buildx.
         with:
-            install: true  # Ensures Docker Buildx is installed.
+            install: true  # Ensures that Docker Buildx is installed on the runner.
 
-      - name: Setup Packer
-        uses: hashicorp/setup-packer@v2
+      - name: Setup Packer  # Step to install HashiCorp Packer for creating machine images.
+        uses: hashicorp/setup-packer@v2  # Uses the official HashiCorp action to install Packer.
 
-      - name: Validate Build Environment
+      - name: Validate Build Environment  # Step to validate that all necessary tools are installed and AWS connectivity is working.
         run: |
-            aws --version
-            terraform --version
-            docker --version
-            packer --version
-            echo "NOTE: Checking AWS cli connection."
+            # Display the installed versions of AWS CLI, Terraform, Docker, and Packer to ensure they are correctly set up.
+            aws --version  # Check if AWS CLI is installed and display its version.
+            terraform --version  # Check if Terraform is installed and display its version.
+            docker --version  # Check if Docker is installed and display its version.
+            packer --version  # Check if Packer is installed and display its version.
 
+            echo "NOTE: Checking AWS CLI connection."  # Inform the user that AWS CLI connection is being tested.
+
+            # Attempt to fetch the AWS account identity to verify that the credentials are correct and have the necessary permissions.
             aws sts get-caller-identity --query "Account" --output text >> /dev/null
 
-            # Check the return code of the login command
-            if [ $? -ne 0 ]; then
-              echo "ERROR: Failed to connect to AWS. Please check your credentials and environment variables."
-              exit 1
+            # Check if the previous AWS CLI command succeeded.
+            if [ $? -ne 0 ]; then  # If the exit code is not zero, the command failed.
+              echo "ERROR: Failed to connect to AWS. Please check your credentials and environment variables."  # Display an error message indicating AWS connection failure.
+              exit 1  # Exit the script with an error code to fail the workflow.
             else
-              echo "NOTE: Successfully logged into AWS."
+              echo "NOTE: Successfully logged into AWS."  # If the command succeeded, display a success message.
             fi

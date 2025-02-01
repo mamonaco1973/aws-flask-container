@@ -1,36 +1,47 @@
-name: Validate Solution
+name: Validate Solution  # Name of the workflow for easier identification in GitHub Actions.
 
 on:
-
-  workflow_dispatch:
+  workflow_dispatch:  # This allows the workflow to be manually triggered from the GitHub Actions UI.
 
 env:
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Fetch AWS access key ID from GitHub Secrets.
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Fetch AWS secret access key from GitHub Secrets.
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Fetch the AWS region from GitHub Secrets.
 
 jobs:
-  validate:
-    name: Validates Solution
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+  validate:  # Define a job named 'validate'
+    name: Validates Solution  # Human-readable name for the job.
+    runs-on: ubuntu-latest  # Specifies that the job runs on the latest Ubuntu runner provided by GitHub.
 
-      - name: Validate Solution
+    steps:
+      - name: Checkout Code  # Step to checkout the repository code onto the runner.
+        uses: actions/checkout@v3  # Uses the 'checkout' action to pull the latest code from the repository.
+
+      - name: Validate Solution  # Step to validate the deployed App Runner solution.
         run: |
-            # Fetch the default domain of the App Runner service
+            # Define the name of the App Runner service we are validating.
             SERVICE_NAME="flask-app-runner"
+
+            # Use AWS CLI to fetch the default domain of the App Runner service.
             SERVICE_URL=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$SERVICE_NAME'].ServiceUrl" --output text)
 
-            # Check if the SERVICE_URL is empty
+            # If the service URL is empty or not found, print an error message and exit.
             if [[ -z "$SERVICE_URL" || "$SERVICE_URL" == "None" ]]; then
                 echo "ERROR: Default domain for App Runner service '$SERVICE_NAME' could not be retrieved. Please check if the service exists and try again."
-                exit 1
+                exit 1  # Exit the script with an error code to fail the workflow.
             fi
 
+            # Change directory to '02-docker' where the validation script is located.
             cd ./02-docker
+
+            # Prepend 'https://' to the retrieved service URL for proper API testing.
             SERVICE_URL="https://$SERVICE_URL"
+
+            # Print a note to indicate that the App Runner solution is being tested.
             echo "NOTE: Testing the App Runner Solution."
+
+            # Display the full URL being tested, including the /gtg endpoint with details enabled.
             echo "NOTE: URL for App Runner Solution is $SERVICE_URL/gtg?details=true"
+
+            # Execute the test script, passing in the service URL as an argument.
             ./test_candidates.py $SERVICE_URL
