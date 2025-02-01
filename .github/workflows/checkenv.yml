@@ -54,13 +54,13 @@ jobs:
             
             backend=$(grep -r 'backend ' ./01-ecr/*.tf 2> /dev/null)
             if [ -z "$backend" ]; then
-              echo "No terraform backend configuration is defined for 01-ecr."
+              printf "No terraform backend configuration is defined for 01-ecr."
               exit 1
             fi
 
             backend=$(grep -r 'backend ' ./03-apprunner/*.tf 2> /dev/null)
             if [ -z "$backend" ]; then
-              echo "No terraform backend configuration is defined for 03-apprunner."
+              printf "No terraform backend configuration is defined for 03-apprunner."
               exit 1
             fi
 
