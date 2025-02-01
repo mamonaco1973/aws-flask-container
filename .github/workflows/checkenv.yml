@@ -56,8 +56,7 @@ jobs:
               exit 1
             fi
 
-            backend=$(grep -r 'backend ' ./03-apprunner/*.tf)
-            echo $backend
+            backend=$(grep -r 'backend ' ./03-apprunner/*.tf || true)
             if [ -z "$backend" ]; then
               echo "ERROR: No terraform backend configuration is defined for 03-apprunner."
               exit 1
