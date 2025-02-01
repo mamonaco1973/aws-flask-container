@@ -6,7 +6,7 @@ on:
 env:
     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Fetch AWS access key ID from GitHub Secrets.
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Fetch AWS secret access key from GitHub Secrets.
-    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Fetch the AWS region from GitHub Secrets.
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}  # Fetch the AWS region from GitHub Secrets.
 
 jobs:
   validate:  # Define a job named 'validate'
