@@ -52,6 +52,9 @@ jobs:
 
             echo "NOTE: Checking for terraform backend configuration."
             
+            pwd
+            ls -al
+            
             grep -r 'backend ' ./01-ecr/*.tf 
             #backend=$(grep -r 'backend ' ./01-ecr/*.tf)
             #echo $backend
