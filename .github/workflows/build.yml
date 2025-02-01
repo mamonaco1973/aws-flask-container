@@ -34,12 +34,12 @@ jobs:
           cd "01-ecr" 
           echo "NOTE: Building ECR Instance."
 
-          # Prevent a mess for happening if you run the github action without a backend
+          # Prevent a mess from happening if you run the github action without a backend
 
           backend=$(grep -r 'backend ' *.tf 2> /dev/null)
           if [ -z "$backend" ]; then
               echo "ERROR: No terraform backend configuration is defined."
-              #exit 1
+              exit 1
           fi
 
           # Initialize Terraform in the directory.
@@ -109,14 +109,14 @@ jobs:
             cd 03-apprunner
             echo "NOTE: Building apprunner instance and deploy flask container."
 
-            # Prevent a mess for happening if you run the github action without a backend
+            # Prevent a mess from happening if you run the github action without a backend
 
             backend=$(grep -r 'backend ' *.tf 2> /dev/null)
             if [ -z "$backend" ]; then
               echo "ERROR: No terraform backend configuration is defined."
-              #exit 1
+              exit 1
             fi
-            
+
             # Initialize Terraform in the directory.
             terraform init
 
