@@ -25,4 +25,4 @@ jobs:
           # Navigate to the 03-apprunner directory
           cd "03-apprunner" 
           terraform init
-          terraform apply plan
+          terraform plan

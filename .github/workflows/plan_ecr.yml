@@ -25,4 +25,4 @@ jobs:
           # Navigate to the 01-ecr directory
           cd "01-ecr" 
           terraform init
-          terraform apply plan
+          terraform plan
