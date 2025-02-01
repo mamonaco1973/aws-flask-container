@@ -1,0 +1,43 @@
+name: Destroy Solution # The name of the pipeline, indicating its purpose to destroy
+
+on:
+  workflow_dispatch: # This pipeline can only be triggered manually, ensuring no accidental execution.
+
+env:
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  phase_0: # The job that handles the destruction of infrastructure.
+    runs-on: ubuntu-latest # Specifies the job runs on the latest version of the Ubuntu runner.
+    name:  Destroy App Runner Instance
+    steps: # Steps define the individual tasks performed in the job.
+
+      - name: Checkout Code # Step to pull the repository code.
+        uses: actions/checkout@v3 # Uses the official GitHub checkout action to fetch the repository contents.
+
+      - name: Setup Terraform # Installs the required version of Terraform for managing infrastructure.
+        uses: hashicorp/setup-terraform@v2 # Utilizes the official HashiCorp action to install Terraform.
+        
+      - name: Destroy App Runner Instance # Executes the destruction of all resources managed by Terraform.
+        run: |    
+            cd "03-apprunner"
+            echo "NOTE: Destroying app runner instance."
+            terraform init
+            terraform destroy -auto-approve
+            cd ..
+
+  phase_1: 
+    runs-on: ubuntu-latest # Specifies the job runs on the latest version of the Ubuntu runner.
+    needs: phase_0
+    name:  Destroy ECR
+    steps: # Steps define the individual tasks performed in the job.
+
+      - name: Checkout Code # Step to pull the repository code.
+        uses: actions/checkout@v3 # Uses the official GitHub checkout action to fetch the repository contents.
+
+      - name: Delete ECR # Executes the destruction of all resources managed by Terraform.
+        run: |
+            ECR_REPOSITORY_NAME="flask-app"
+            aws ecr delete-repository --repository-name $ECR_REPOSITORY_NAME --force
