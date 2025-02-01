@@ -50,16 +50,17 @@ jobs:
             # If all variables are set, print success message
             echo "NOTE: All required environment variables are set."
 
-            # List of required files
-            REQUIRED_FILES=("./01-ecr/01-ecr-backend.tf" "./03-apprunner/03-apprunner-backend.tf")
+            backend=$(grep -r 'backend ' ./01-ecr/*.tf 2> /dev/null)
+            if [ -z "$backend" ]; then
+              echo "ERROR: No terraform backend configuration is defined for 01-ecr."
+              exit 1
+            fi
 
-            # Check if required files exist
-            for FILE in "${REQUIRED_FILES[@]}"; do
-              if [ ! -f "$FILE" ]; then
-                  echo "ERROR: Required file '$FILE' does not exist."
-              exit -1
-              fi
-            done
+            backend=$(grep -r 'backend ' ./03-apprunner/*.tf 2> /dev/null)
+            if [ -z "$backend" ]; then
+              echo "ERROR: No terraform backend configuration is defined for 03-apprunner."
+              exit 1
+            fi
 
             # If all checks pass
             echo "NOTE: All required backend files exist."
