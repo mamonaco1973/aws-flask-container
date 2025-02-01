@@ -36,10 +36,24 @@ jobs:
             docker --version  # Check if Docker is installed and display its version.
             packer --version  # Check if Packer is installed and display its version.
 
+            # List of required environment variables
+            REQUIRED_VARS=("AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY" "AWS_DEFAULT_REGION")
+
+            # Loop through each variable and check if it's set
+            for VAR in "${REQUIRED_VARS[@]}"; do
+                if [ -z "${!VAR}" ]; then
+                  echo "ERROR: Environment variable '$VAR' is not set."
+                  exit -1
+                fi
+            done
+
+            # If all variables are set, print success message
+            echo "NOTE: All required environment variables are set."
+
             echo "NOTE: Checking AWS CLI connection."  # Inform the user that AWS CLI connection is being tested.
 
             # Attempt to fetch the AWS account identity to verify that the credentials are correct and have the necessary permissions.
-            aws sts get-caller-identity --query "Account" --output text >> /dev/null
+            aws sts get-caller-identity --query "Account" 
 
             # Check if the previous AWS CLI command succeeded.
             if [ $? -ne 0 ]; then  # If the exit code is not zero, the command failed.
