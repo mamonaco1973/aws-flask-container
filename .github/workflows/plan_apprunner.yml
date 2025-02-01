@@ -11,7 +11,7 @@ env:
 
 jobs:
   plan:
-    name: Plan ECR Build
+    name: Plan App Runner Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
