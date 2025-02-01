@@ -50,29 +50,21 @@ jobs:
             # If all variables are set, print success message
             echo "NOTE: All required environment variables are set."
 
-            echo "NOTE: Checking for terraform backend configuration."
-            
-            pwd
-            ls -al ./01-ecr/*.tf
-            grep backend ./01-ecr/*.tf || true
+            backend=$(grep -r 'backend ' ./01-ecr/*.tf || true)
+            if [ -z "$backend" ]; then
+              echo "ERROR: No terraform backend configuration is defined for 01-ecr."
+              exit 1
+            fi
 
-            #backend=$(grep -r 'backend ' ./01-ecr/*.tf)
-            #echo $backend
-            #if [ -z "$backend" ]; then
-            #  echo "ERROR: No terraform backend configuration is defined for 01-ecr."
-            #  #exit 1
-            #fi
+            backend=$(grep -r 'backend ' ./03-apprunner/*.tf)
+            echo $backend
+            if [ -z "$backend" ]; then
+              echo "ERROR: No terraform backend configuration is defined for 03-apprunner."
+              exit 1
+            fi
 
-            #grep -r 'backend ' ./03-apprunner/*.tf
+            # If all backend checks are successful.
 
-            #backend=$(grep -r 'backend ' ./03-apprunner/*.tf)
-            #echo $backend
-            #if [ -z "$backend" ]; then
-            #  echo "ERROR: No terraform backend configuration is defined for 03-apprunner."
-            #  #exit 1
-            #fi
-
-            # If all checks pass
             echo "NOTE: All required backend files exist."
 
             echo "NOTE: Checking AWS CLI connection."  # Inform the user that AWS CLI connection is being tested.
