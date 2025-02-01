@@ -55,7 +55,8 @@ jobs:
             pwd
             ls -al
 
-            grep backend ./01-ecr/*.tf 
+            #grep backend ./01-ecr/*.tf 
+
             #backend=$(grep -r 'backend ' ./01-ecr/*.tf)
             #echo $backend
             #if [ -z "$backend" ]; then
