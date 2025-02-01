@@ -1,109 +1,146 @@
+# Name of the workflow. This will appear in the GitHub Actions UI.
 name: Build Solution
 
+# Trigger for the workflow. This workflow is triggered manually using the `workflow_dispatch` event.
 on:
-
   workflow_dispatch:
 
+# Environment variables used throughout the workflow.
+# These are sensitive values stored in GitHub Secrets and injected at runtime.
 env:
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # AWS access key for authentication.
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # AWS secret key for authentication.
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Default AWS region for resource deployment.
 
+# Jobs define the sequence of tasks to be executed in the workflow.
 jobs:
+  # First job: Builds an Amazon Elastic Container Registry (ECR) instance.
   deploy_phase_1:
-    name: Build ECR Instance
-    runs-on: ubuntu-latest
+    name: Build ECR Instance  # Human-readable name for the job.
+    runs-on: ubuntu-latest  # Specifies the runner environment (Ubuntu latest).
     steps:
+      # Step 1: Checkout the repository code to the runner.
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Uses the official GitHub Actions checkout action.
 
+      # Step 2: Set up Terraform on the runner.
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v2  # Uses the official HashiCorp Terraform setup action.
 
+      # Step 3: Apply Terraform to create the ECR instance.
       - name: Apply Terraform
         run: |
-          # Navigate to the 01-ecr directory
+          # Navigate to the directory containing the Terraform configuration for ECR.
           cd "01-ecr" 
           echo "NOTE: Building ECR Instance."
 
+          # Initialize Terraform in the directory.
           terraform init
+
+          # Apply the Terraform configuration to create the ECR instance.
+          # The `-auto-approve` flag skips manual confirmation.
           terraform apply -auto-approve
 
+          # Navigate back to the root directory.
           cd ..
 
+  # Second job: Builds a Docker container for the Flask application and pushes it to ECR.
   deploy_phase_2:
-    name: Build Flask Container
-    needs: deploy_phase_1
-    runs-on: ubuntu-latest
+    name: Build Flask Container  # Human-readable name for the job.
+    needs: deploy_phase_1  # Ensures this job runs only after `deploy_phase_1` completes.
+    runs-on: ubuntu-latest  # Specifies the runner environment (Ubuntu latest).
     steps:
+      # Step 1: Checkout the repository code to the runner.
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Uses the official GitHub Actions checkout action.
 
+      # Step 2: Set up Docker Buildx for building and pushing Docker images.
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v2  # Uses the official Docker Buildx setup action.
         with:
-            install: true
+            install: true  # Ensures Docker Buildx is installed.
 
+      # Step 3: Build the Flask container and push it to the ECR instance.
       - name: Build Flask Container
         run: |
+            # Navigate to the directory containing the Docker configuration.
             cd "02-docker"
             echo "NOTE: Building flask container with Docker."
 
             # Retrieve the AWS Account ID using the AWS CLI.
             AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 
-            # Authenticate Docker to AWS ECR using the retrieved credentials.
+            # Authenticate Docker to the AWS ECR registry using the retrieved credentials.
             aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com
 
-            # Build and push the Docker image.
-            # The image tag includes the AWS Account ID and the specified repository and tag.
-
+            # Build the Docker image and push it to the ECR repository.
+            # The image tag includes the AWS Account ID, repository name, and a specific tag (`flask-app-rc1`).
             docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/flask-app:flask-app-rc1 . --push
-            cd ..
-  deploy_phase_3:
-    name: Build App Runner Instance
-    needs: deploy_phase_2
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
 
+            # Navigate back to the root directory.
+            cd ..
+
+  # Third job: Builds an AWS App Runner instance and deploys the Flask container.
+  deploy_phase_3:
+    name: Build App Runner Instance  # Human-readable name for the job.
+    needs: deploy_phase_2  # Ensures this job runs only after `deploy_phase_2` completes.
+    runs-on: ubuntu-latest  # Specifies the runner environment (Ubuntu latest).
+    steps:
+      # Step 1: Checkout the repository code to the runner.
+      - name: Checkout Code
+        uses: actions/checkout@v3  # Uses the official GitHub Actions checkout action.
+
+      # Step 2: Set up Terraform on the runner.
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        
+        uses: hashicorp/setup-terraform@v2  # Uses the official HashiCorp Terraform setup action.
+
+      # Step 3: Apply Terraform to create the App Runner instance.
       - name: Apply Terraform
         run: |
-            # Navigate to the 03-apprunner directory
+            # Navigate to the directory containing the Terraform configuration for App Runner.
             cd 03-apprunner
             echo "NOTE: Building apprunner instance and deploy flask container."
+
+            # Initialize Terraform in the directory.
             terraform init
+
+            # Apply the Terraform configuration to create the App Runner instance.
+            # The `-auto-approve` flag skips manual confirmation.
             terraform apply -auto-approve
+
+            # Navigate back to the root directory.
             cd ..
 
+  # Fourth job: Validates the deployed solution by testing the App Runner service.
   validate:
-    name: Validate Solution
-    needs: deploy_phase_3
-    runs-on: ubuntu-latest
+    name: Validate Solution  # Human-readable name for the job.
+    needs: deploy_phase_3  # Ensures this job runs only after `deploy_phase_3` completes.
+    runs-on: ubuntu-latest  # Specifies the runner environment (Ubuntu latest).
     steps:
+      # Step 1: Checkout the repository code to the runner.
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Uses the official GitHub Actions checkout action.
 
+      # Step 2: Validate the deployed App Runner service.
       - name: Validate Solution
         run: |
-            # Fetch the default domain of the App Runner service
+            # Fetch the default domain of the App Runner service.
             SERVICE_NAME="flask-app-runner"
             SERVICE_URL=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$SERVICE_NAME'].ServiceUrl" --output text)
 
-            # Check if the SERVICE_URL is empty
+            # Check if the SERVICE_URL is empty or invalid.
             if [[ -z "$SERVICE_URL" || "$SERVICE_URL" == "None" ]]; then
                 echo "ERROR: Default domain for App Runner service '$SERVICE_NAME' could not be retrieved. Please check if the service exists and try again."
-                exit 1
+                exit 1  # Exit with an error code if the service URL is invalid.
             fi
 
+            # Navigate to the directory containing the test script.
             cd ./02-docker
+
+            # Construct the full URL for the App Runner service.
             SERVICE_URL="https://$SERVICE_URL"
             echo "NOTE: Testing the App Runner Solution."
             echo "NOTE: URL for App Runner Solution is $SERVICE_URL/gtg?details=true"
-            ./test_candidates.py $SERVICE_URL
 
-           
+            # Run the test script to validate the App Runner service.
+            ./test_candidates.py $SERVICE_URL
