@@ -13,8 +13,8 @@ env:
     AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
-  setup: 
-    name: Setup Build
+  deploy_phase_1:
+    name: Deploy ECR Instance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -22,19 +22,6 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          install: true
-
-  deploy_phase_1:
-    name: Deploy ECR Instance
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
 
       - name: Apply Terraform
         run: |
@@ -53,6 +40,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+            install: true
 
       - name: Build Flask Container
         run: |
@@ -78,6 +70,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        
       - name: Apply Terraform
         run: |
             # Navigate to the 03-apprunner directory
