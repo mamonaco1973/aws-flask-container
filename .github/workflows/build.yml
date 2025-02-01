@@ -11,7 +11,7 @@ env:
 
 jobs:
   deploy_phase_1:
-    name: Plan ECR Instance
+    name: Build ECR Instance
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -20,7 +20,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Plan Terraform
+      - name: Apply Terraform
         run: |
           # Navigate to the 01-ecr directory
           cd "01-ecr" 
@@ -61,7 +61,7 @@ jobs:
             docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/flask-app:flask-app-rc1 . --push
             cd ..
   deploy_phase_3:
-    name: Apply App Runner Instance
+    name: Build App Runner Instance
     needs: deploy_phase_2
     runs-on: ubuntu-latest
     steps:

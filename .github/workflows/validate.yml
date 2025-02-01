@@ -1,0 +1,36 @@
+name: Validate Solution
+
+on:
+
+  workflow_dispatch:
+
+env:
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  validate:
+    name: Validates Solution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Validate Solution
+        run: |
+            # Fetch the default domain of the App Runner service
+            SERVICE_NAME="flask-app-runner"
+            SERVICE_URL=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$SERVICE_NAME'].ServiceUrl" --output text)
+
+            # Check if the SERVICE_URL is empty
+            if [[ -z "$SERVICE_URL" || "$SERVICE_URL" == "None" ]]; then
+                echo "ERROR: Default domain for App Runner service '$SERVICE_NAME' could not be retrieved. Please check if the service exists and try again."
+                exit 1
+            fi
+
+            cd ./02-docker
+            SERVICE_URL="https://$SERVICE_URL"
+            echo "NOTE: Testing the App Runner Solution."
+            echo "NOTE: URL for App Runner Solution is $SERVICE_URL/gtg?details=true"
+            ./test_candidates.py $SERVICE_URL
