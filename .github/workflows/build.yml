@@ -14,8 +14,30 @@ env:
 
 jobs:
   deploy_phase_1:
-    name: Deploy ECR Instance
+    name: Plan ECR Instance
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Apply Terraform
+        run: |
+          # Navigate to the 01-ecr directory
+          cd "01-ecr" 
+          echo "NOTE: Building ECR Instance."
+
+          terraform init
+          terraform plan
+
+          cd ..
+
+  deploy_phase_2:
+    name: Apply ECR Instance
+    runs-on: ubuntu-latest
+    needs: deploy_phase_1
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -33,9 +55,10 @@ jobs:
           terraform apply -auto-approve
 
           cd ..
-  deploy_phase_2:
+
+  deploy_phase_3:
     name: Build Flask Container
-    needs: deploy_phase_1
+    needs: deploy_phase_2
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -62,9 +85,29 @@ jobs:
 
             docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/flask-app:flask-app-rc1 . --push
             cd ..
-  deploy_phase_3:
-    name: Deploy App Runner Instance
-    needs: deploy_phase_2
+  deploy_phase_4:
+    name: Plan App Runner Instance
+    needs: deploy_phase_3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        
+      - name: Apply Terraform
+        run: |
+            # Navigate to the 03-apprunner directory
+            cd 03-apprunner
+            echo "NOTE: Building apprunner instance and deploy flask container."
+            terraform init
+            terraform plan
+            cd ..
+
+  deploy_phase_5:
+    name: Apply App Runner Instance
+    needs: deploy_phase_4
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -84,7 +127,7 @@ jobs:
 
   validate:
     name: Validates Solution
-    needs: deploy_phase_3
+    needs: deploy_phase_5
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
