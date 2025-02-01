@@ -50,15 +50,17 @@ jobs:
             # If all variables are set, print success message
             echo "NOTE: All required environment variables are set."
 
+            echo "NOTE: Checking for terraform backend configuration."
+            
             backend=$(grep -r 'backend ' ./01-ecr/*.tf 2> /dev/null)
             if [ -z "$backend" ]; then
-              echo "ERROR: No terraform backend configuration is defined for 01-ecr."
+              echo "No terraform backend configuration is defined for 01-ecr."
               exit 1
             fi
 
             backend=$(grep -r 'backend ' ./03-apprunner/*.tf 2> /dev/null)
             if [ -z "$backend" ]; then
-              echo "ERROR: No terraform backend configuration is defined for 03-apprunner."
+              echo "No terraform backend configuration is defined for 03-apprunner."
               exit 1
             fi
 
