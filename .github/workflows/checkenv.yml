@@ -6,7 +6,7 @@ on:
 env:
     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Securely pulls AWS Access Key ID from GitHub Secrets.
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Securely pulls AWS Secret Access Key from GitHub Secrets.
-    AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Defines the AWS region using a secret.
+    AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}  # Defines the AWS region using a secret.
 
 jobs:
   validate:  # Defines a job named 'validate' which will perform the environment checks.
@@ -63,7 +63,7 @@ jobs:
 
             # If all checks pass
             echo "NOTE: All required backend files exist."
-            
+
             echo "NOTE: Checking AWS CLI connection."  # Inform the user that AWS CLI connection is being tested.
 
             # Attempt to fetch the AWS account identity to verify that the credentials are correct and have the necessary permissions.
