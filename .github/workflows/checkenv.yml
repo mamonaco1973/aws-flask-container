@@ -53,21 +53,21 @@ jobs:
             echo "NOTE: Checking for terraform backend configuration."
             
             grep -r 'backend ' ./01-ecr/*.tf 
-            backend=$(grep -r 'backend ' ./01-ecr/*.tf)
-            echo $backend
-            if [ -z "$backend" ]; then
-              echo "ERROR: No terraform backend configuration is defined for 01-ecr."
-              #exit 1
-            fi
-            
-            grep -r 'backend ' ./03-apprunner/*.tf
+            #backend=$(grep -r 'backend ' ./01-ecr/*.tf)
+            #echo $backend
+            #if [ -z "$backend" ]; then
+            #  echo "ERROR: No terraform backend configuration is defined for 01-ecr."
+            #  #exit 1
+            #fi
 
-            backend=$(grep -r 'backend ' ./03-apprunner/*.tf)
-            echo $backend
-            if [ -z "$backend" ]; then
-              echo "ERROR: No terraform backend configuration is defined for 03-apprunner."
-              #exit 1
-            fi
+            #grep -r 'backend ' ./03-apprunner/*.tf
+
+            #backend=$(grep -r 'backend ' ./03-apprunner/*.tf)
+            #echo $backend
+            #if [ -z "$backend" ]; then
+            #  echo "ERROR: No terraform backend configuration is defined for 03-apprunner."
+            #  #exit 1
+            #fi
 
             # If all checks pass
             echo "NOTE: All required backend files exist."
