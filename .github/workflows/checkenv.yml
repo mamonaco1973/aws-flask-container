@@ -52,6 +52,7 @@ jobs:
 
             echo "NOTE: Checking for terraform backend configuration."
             
+            grep -r 'backend ' ./01-ecr/*.tf 2
             backend=$(grep -r 'backend ' ./01-ecr/*.tf 2> /dev/null)
             echo $backend
             if [ -z "$backend" ]; then
