@@ -4,11 +4,11 @@ Welcome to **Video 1** of the [Simple Containers Series](https://www.youtube.com
 
 ### In This Video, We'll:
 
+- Use **DynamoDB** for persistent data storage 
 - **Containerize** the Python microservice using **Docker**  
 - **Push** the container image to **Amazon Elastic Container Registry (ECR)**  
 - **Deploy** the container using **AWS App Runner**  
-- Use **DynamoDB** for persistent data storage    
-
+   
 ## **Amazon ECR: Simplifying Container Image Management**
 
 **Amazon Elastic Container Registry (ECR)** is a fully managed Docker container registry provided by AWS. It allows you to store, manage, and deploy container images securely and at scale. ECR integrates seamlessly with AWS services like **App Runner**, **ECS**, and **EKS**, making it easy to deploy containerized applications.
