@@ -24,7 +24,7 @@ Below, we’ll walk through the steps required to configure GitHub Actions for y
 ### 2. **Clone the New Repository to Your Local Environment**
    - Once your repository is created, clone it to your local machine using the following command:
      ```bash
-     git clone https://github.com/your-username/your-new-repo.git
+     git clone git://github.com/your-username/your-new-repo.git
      ```
    - Navigate into the cloned repository directory:
      ```bash
