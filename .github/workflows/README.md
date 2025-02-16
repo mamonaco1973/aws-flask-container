@@ -112,20 +112,19 @@ Below, we’ll walk through the steps required to configure GitHub Actions for y
 
    - This process allows you to manually test and validate your workflows before relying on automated triggers (e.g., push or pull request events).
    
-
 ## Quick Links
 
 1. [Simple Cloud Containers: Docker Containers in AWS, Azure, and GCP](https://youtu.be/2BQB-OMAhH8)
-2. [Cloud GitHub Actions](TBD)
+2. [GitHub Actions](https://youtu.be/Ngsz9pfgBUo)
 3. AWS Solution
    - [Simple AWS Containers](https://youtu.be/hhtDigvwMwk)
-   - [AWS GitHub Actions](TBD)
+   - [AWS GitHub Actions](https://youtu.be/FQPjUdQ4hLM)
    - [GitHub Project](https://github.com/mamonaco1973/aws-flask-container/)
 4. Azure Solution
    - [Simple Azure Containers](https://youtu.be/eogMQjbBvTo)
-   - [Azure GitHub Actions](TBD)
+   - [Azure GitHub Actions](https://youtu.be/MGzcVCAfouQ)
    - [GitHub Project](https://github.com/mamonaco1973/azure-flask-container/)
 5. GCP Solution
    - [Simple GCP Containers](https://youtu.be/9q0hXgSssPI)
-   - [GCP GitHub Actions](TBD)
+   - [GCP GitHub Actions](https://youtu.be/ZMlJ_Cj7tY0)
    - [GitHub Project](https://github.com/mamonaco1973/gcp-flask-container/)
