@@ -1,6 +1,6 @@
 # Configuring GitHub Actions for Continuous Integration and Deployment
 
-**This video series serves as a complementary guide to the [Simple AWS Containers](https://youtu.be/hhtDigvwMwk) video**, where we explored deploying a Python-based microservice using the Flask framework using containers in AWS. In this new series, we will build upon the original project by configuring **GitHub Actions** to automate the build, test, and deployment processes entirely within the GitHub ecosystem.
+**This video serves as a complementary guide to the [Simple AWS Containers](https://youtu.be/hhtDigvwMwk) video**, where we explored deploying a Python-based microservice using the Flask framework using containers in AWS. In this new series, we will build upon the original project by configuring **GitHub Actions** to automate the build, test, and deployment processes entirely within the GitHub ecosystem.
 
 GitHub Actions is a powerful CI/CD (Continuous Integration and Continuous Deployment) tool that allows developers to automate workflows directly within their GitHub repositories. By leveraging GitHub Actions, you can streamline your development pipeline, reduce manual errors, and ensure consistent deployments across environments.
 
