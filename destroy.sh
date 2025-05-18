@@ -1,3 +1,5 @@
+export AWS_DEFAULT_REGION=us-east-2
+
 cd "03-apprunner"
 
 echo "NOTE: Destroying app runner instance."

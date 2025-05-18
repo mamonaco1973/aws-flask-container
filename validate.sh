@@ -1,6 +1,8 @@
 
 #!/bin/bash
 
+export AWS_DEFAULT_REGION=us-east-2
+
 # Fetch the default domain of the App Runner service
 SERVICE_NAME="flask-app-runner"
 SERVICE_URL=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$SERVICE_NAME'].ServiceUrl" --output text)
