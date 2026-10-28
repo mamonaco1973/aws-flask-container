@@ -1,136 +1,108 @@
-# Deploying Simple Containers in AWS
+# Flask Microservice in a Container on AWS App Runner
 
-Welcome to **Video 1** of the [Simple Containers Series](https://www.youtube.com/@MikesCloudSolutions), where we’ll focus on containerizing a Python-based microservice and deploying it on **AWS App Runner**. This video complements the [AWS Autoscaling](https://www.youtube.com/watch?v=aBMM6vjC8d0) video, where we deployed Flask microservices using **EC2 instances** and **Auto Scaling Groups**. That same microservice will be packaged as a container and deployed with **AWS App Runner**.
+Video 1 of the Simple Containers series. The same Flask candidate service
+from the [AWS Auto Scaling](https://www.youtube.com/watch?v=aBMM6vjC8d0)
+project, packaged as a **Docker** image, pushed to **Amazon ECR**, and run on
+**AWS App Runner**, which handles the load balancing, TLS and scaling. The
+service stores candidates in **DynamoDB**. GitHub Actions workflows can run
+the same build.
 
-### In This Video, We'll:
+![App Runner service](app-runner.png)
 
-- Use **DynamoDB** for persistent data storage 
-- **Containerize** the Python microservice using **Docker**  
-- **Push** the container image to **Amazon Elastic Container Registry (ECR)**  
-- **Deploy** the container using **AWS App Runner**  
-   
-## **Amazon ECR: Simplifying Container Image Management**
+| Piece | Where | Role |
+|---|---|---|
+| **Amazon ECR** | us-east-2 | `flask-app` repository; the image is tagged `flask-app-rc1` |
+| **flask-app-runner** | App Runner | runs the image on port 8000 with 1 vCPU and 2 GB; health check `/gtg`; public HTTPS URL |
+| **IAM roles** | global | `app-runner-build-role` pulls from ECR; `app-runner-run-role` allows DynamoDB `Query`, `PutItem`, `Scan` |
+| **DynamoDB** | us-east-2 | `Candidates` table, keyed on `CandidateName` |
+| **Terraform state** | S3 + DynamoDB lock table | only for the GitHub workflows, created by `00-backend/` |
 
-**Amazon Elastic Container Registry (ECR)** is a fully managed Docker container registry provided by AWS. It allows you to store, manage, and deploy container images securely and at scale. ECR integrates seamlessly with AWS services like **App Runner**, **ECS**, and **EKS**, making it easy to deploy containerized applications.
+## Architecture
 
-### **Key Features:**
-- **Private & Public Repositories:** Store container images securely with fine-grained access control.
-- **Integration with CI/CD:** Easily integrates with GitHub Actions, AWS CodePipeline, and Jenkins for automated deployments.
-- **High Availability:** AWS manages replication, durability, and scaling behind the scenes.
-- **Security:** Supports encryption at rest and in transit, plus IAM-based access control.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="architecture-dark.svg">
+  <img alt="apply.sh, or the GitHub Actions workflows, builds the Flask service's container image and pushes it to the flask-app repository in Amazon ECR. App Runner pulls it with a build role and runs it as flask-app-runner on port 8000 with one vCPU and 2 GB, health-checking /gtg; clients reach it over HTTPS. Its run role lets it read and write the Candidates table in DynamoDB. The workflows keep Terraform state in an S3 bucket with a DynamoDB lock table, created by 00-backend." src="architecture-light.svg">
+</picture>
 
-### **How It Works:**
-1. **Build** your Docker image locally or in a CI/CD pipeline.
-2. **Tag** the image with your ECR repository URL.
-3. **Push** the image to ECR using Docker CLI or automation tools.
-4. **Pull** the image from ECR to deploy in services like App Runner, ECS, or EKS.
+Regenerate with `python3 make_diagram.py`.
 
-## **AWS App Runner: Effortless Deployment for Containerized Applications**
+- **`00-backend/`**: the S3 state bucket and lock table for the workflows,
+  plus the backend files it writes into `01-ecr/` and `03-apprunner/`.
+- **`01-ecr/`**: the `flask-app` repository.
+- **`02-docker/`**: the `Dockerfile` (Ubuntu 24.04, gunicorn on 8000), the
+  app, and the `test_candidates.py` smoke test.
+- **`03-apprunner/`**: the App Runner service, its roles, and the DynamoDB
+  table.
+- **`.github/workflows/`**: `checkenv`, `build`, `validate` and `destroy`
+  workflows, run by hand; see
+  [the workflow guide](.github/workflows/README.md).
 
-**AWS App Runner** is a fully managed service that makes it easy to deploy and run containerized web applications and APIs without managing servers. App Runner abstracts away infrastructure management, handling scaling, load balancing, and deployments automatically.
+![ECR repository](ecr.png)
 
-### **Key Features:**
-- **Simple Deployment:** Deploy directly from ECR, GitHub, or a container registry with minimal configuration.
-- **Automatic Scaling:** Automatically scales up or down based on incoming traffic, including scaling to zero during idle periods.
-- **Built-in Load Balancing:** Distributes incoming requests without the need to configure a separate load balancer.
-- **Secure by Default:** Supports HTTPS endpoints, environment variables encryption, and IAM roles for secure access to AWS services.
+## How it builds
 
-### **How It Works:**
-1. **Source:** Connect to a container image from ECR or a source code repository (App Runner builds it for you).
-2. **Configure:** Set runtime settings like environment variables, CPU/memory limits, and deployment policies.
-3. **Deploy:** App Runner handles provisioning, load balancing, scaling, and monitoring automatically.
-4. **Manage:** Monitor logs, metrics, and scale settings via the AWS Console or CLI.
+1. Terraform creates the ECR repository.
+2. `docker build --push` builds the image and pushes it as
+   `flask-app:flask-app-rc1`.
+3. Terraform creates the roles, the table and the App Runner service, which
+   deploys that tag.
 
-![AWS Diagram](aws-flask-container.png)
+## API
+
+| Method | Path | Returns |
+|---|---|---|
+| GET | `/gtg` | 200; with `?details=true`, connection and host details |
+| GET | `/candidate/<name>` | the candidate, or 404 |
+| POST | `/candidate/<name>` | `{"CandidateName": <name>}`, or 500 |
+| GET | `/candidates` | every candidate, or 404 |
 
 ## Prerequisites
 
 * [An AWS Account](https://aws.amazon.com/console/)
-* [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) 
-* [Install Latest Terraform](https://developer.hashicorp.com/terraform/install)
-* [Install Postman](https://www.postman.com/downloads/) for testing
+* [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+* [Install Terraform](https://developer.hashicorp.com/terraform/install)
 * [Install Docker](https://docs.docker.com/engine/install/)
 
-If this is your first time watching our content, we recommend starting with this video: [AWS + Terraform: Easy Setup](https://youtu.be/BCMQo0CB9wk). It provides a step-by-step guide to properly configure Terraform, Packer, and the AWS CLI.
+If this is your first time watching our content, we recommend starting with
+this video: [AWS + Terraform: Easy Setup](https://youtu.be/BCMQo0CB9wk).
 
-## Download this Repository
+## Deploy
 
 ```bash
 git clone https://github.com/mamonaco1973/aws-flask-container.git
 cd aws-flask-container
+./apply.sh       # 1: ECR  2: docker build --push  3: App Runner + DynamoDB
 ```
 
-## Build the Code
+Everything deploys to `us-east-2`, with local Terraform state. `apply.sh`
+ends by running `validate.sh`, which runs the smoke test against the service
+URL:
 
-Run [check_env](check_env.sh) then run [apply](apply.sh).
+```
+NOTE: Testing the App Runner Solution.
+NOTE: URL for App Runner Solution is https://abc123xyz.us-east-2.awsapprunner.com/gtg?details=true
+✓ good to go passed
+✓ insert passed
+✓ verification passed
+✓ candidate list passed
+```
+
+To run it from GitHub instead, create your own repository from this template
+and follow the [workflow guide](.github/workflows/README.md): it applies
+`00-backend` once, then runs the workflows with your AWS credentials as
+repository secrets.
+
+## Try it
+
+Call the endpoints at the App Runner URL with Postman or `curl`, for example
+`curl https://<service-url>/candidates`.
+
+## Teardown
 
 ```bash
-~/aws-flask-container$ ./apply.sh
-NOTE: Validating that required commands are found in your PATH.
-NOTE: aws is found in the current PATH.
-NOTE: docker is found in the current PATH.
-NOTE: terraform is found in the current PATH.
-NOTE: All required commands are available.
-NOTE: Checking AWS cli connection.
-NOTE: Successfully logged into AWS.
-NOTE: Building ECR Instance.
-Initializing the backend...
-Initializing provider plugins...
-- Finding latest version of hashicorp/aws...
-- Installing hashicorp/aws v5.86.0...
-[...]
+./destroy.sh     # destroys the App Runner service and table, then deletes the ECR repository
 ```
 
-### **Build Process Overview**
+## Notes
 
-The build process consists of three distinct phases:
-
-#### 1. Build the ECR Instance
-- Creates an Amazon Elastic Container Registry (ECR) using Terraform to store Docker images.
-
-#### 2. Build the Docker Image and Push it
-- Builds the Flask Docker container and pushes the image to the ECR repository.
-
-#### 3. Build the AWS App Runner Instance
-- Deploys the Flask container to AWS App Runner using Terraform.
-
-#### Final Validation
-- After the build completes, the `test_candidates.py` script is run to verify the solution and ensure everything is functioning as expected.
-
-## Tour of Build Output in the AWS Console
-
-- **The ECR Instance**
-
-![ecr](ecr.png)
-
-- **The App Runner Instance**
-
-![app-runner](app-runner.png)
-
-## Flask Endpoint Summary
-
-- [Source Code](./02-docker/app.py)
-
-### `/gtg` (GET)
-- **Purpose**: Health check.
-- **Response**: 
-  - `{"connected": "true", "instance-id": <instance_id>}` (if `details` query parameter is provided).
-  - 200 OK with no body otherwise.
-
-### `/candidate/<name>` (GET)
-- **Purpose**: Retrieve a candidate by name.
-- **Response**: 
-  - Candidate details (JSON) with status `200`.
-  - `"Not Found"` with status `404` if no candidate is found.
-
-### `/candidate/<name>` (POST)
-- **Purpose**: Add or update a candidate by name.
-- **Response**: 
-  - `{"CandidateName": <name>}` with status `200`.
-  - `"Unable to update"` with status `500` on failure.
-
-### `/candidates` (GET)
-- **Purpose**: Retrieve all candidates.
-- **Response**: 
-  - List of candidates (JSON) with status `200`.
-  - `"Not Found"` with status `404` if no candidates exist.
+- **Lab only.** The service is public, with no authentication.
